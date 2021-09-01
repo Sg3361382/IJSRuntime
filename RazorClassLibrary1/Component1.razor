@@ -1,0 +1,40 @@
+﻿@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+
+Enter your name: <input @bind="name" />
+<button @onclick="Submit">Submit</button>
+
+@code { 
+    /*
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await jsRuntime.InvokeVoidAsync("loadScript", "https://code.jquery.com/jquery-3.4.1.js");
+        await jsRuntime.InvokeVoidAsync("loadScript", "js/JavaScript1.js");
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+    */
+
+    private string name = "";
+
+    // Load the module and keep a reference to it
+    // You need to use .AsTask() to convert the ValueTask to Task as it may be awaited multiple times
+    private Task<IJSObjectReference> _module ;
+    private Task<IJSObjectReference> Module => _module ??= JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/JavaScript1.js").AsTask();
+    
+    
+    async Task Submit()
+    {
+        var module = await Module;
+        await module.InvokeVoidAsync("sayHi", name);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_module != null)
+        {
+            var module = await _module;
+            await module.DisposeAsync();
+        }
+    }
+}
